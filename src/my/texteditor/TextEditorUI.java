@@ -4,15 +4,21 @@
  */
 package my.texteditor;
 
+import com.formdev.flatlaf.FlatIntelliJLaf;
+import java.awt.Font;
+import com.formdev.flatlaf.intellijthemes.FlatSolarizedLightIJTheme;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.Date;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
+import javax.swing.UIManager;
 
 /**
  *
@@ -23,17 +29,22 @@ public class TextEditorUI extends javax.swing.JFrame {
     /**
      * Creates new form TextEditorUI
      */
+    
     public TextEditorUI() {
         initComponents();
-        setLocationRelativeTo(null);
         initClock();
+        setLocationRelativeTo(null);
+        
     }
+    
+     Icon logo = new ImageIcon(getClass().getResource("/my/resources/logo.png"));
     
        private void initClock() {
         Timer t = new Timer(1000, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 updateTime();
+                updateDate();
             }
         });
         t.start();
@@ -42,12 +53,18 @@ public class TextEditorUI extends javax.swing.JFrame {
 
     private void updateTime() {
         Date now = new Date();
-        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
-        Calendar cal = Calendar.getInstance();
-        SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");
         String time = formatter.format(now);
         lblTime.setText(time);
-        lblDate.setText(""+ dateformat.format(cal.getTime()));
+    }
+    
+    private void updateDate(){
+        Calendar cal = Calendar.getInstance();
+        DayOfWeek dayOfWeek = LocalDate.now().getDayOfWeek();
+        SimpleDateFormat date = new SimpleDateFormat("yy/MM/dd");
+        lblDate.setText(date.format(cal.getTime()));
+        lblDay.setText(String.valueOf(dayOfWeek).toLowerCase());
+        
     }
 
     /**
@@ -59,10 +76,12 @@ public class TextEditorUI extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jScrollPane1 = new javax.swing.JScrollPane();
-        txtEditor = new javax.swing.JTextArea();
+        jPanel1 = new javax.swing.JPanel();
         lblDate = new javax.swing.JLabel();
         lblTime = new javax.swing.JLabel();
+        lblDay = new javax.swing.JLabel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        txtEditor = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
         menuFile = new javax.swing.JMenu();
         menuNew = new javax.swing.JMenuItem();
@@ -76,25 +95,59 @@ public class TextEditorUI extends javax.swing.JFrame {
         jMenu1 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Text Editor");
 
-        txtEditor.setColumns(20);
-        txtEditor.setRows(5);
-        jScrollPane1.setViewportView(txtEditor);
+        jPanel1.setBackground(new java.awt.Color(255, 204, 204));
 
-        lblDate.setBackground(new java.awt.Color(255, 255, 255));
-        lblDate.setText("Date");
+        lblDate.setBackground(new java.awt.Color(255, 204, 204));
+        lblDate.setFont(new java.awt.Font("DS-Digital", 0, 24)); // NOI18N
+        lblDate.setText("Date ");
         lblDate.setOpaque(true);
 
+        lblTime.setBackground(new java.awt.Color(0, 0, 0));
+        lblTime.setFont(new java.awt.Font("DS-Digital", 0, 24)); // NOI18N
         lblTime.setText("Time");
 
-        jMenuBar1.setBackground(new java.awt.Color(255, 255, 255));
-        jMenuBar1.setBorder(null);
-        jMenuBar1.setForeground(new java.awt.Color(60, 63, 65));
-        jMenuBar1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        jMenuBar1.setFocusable(false);
-        jMenuBar1.setOpaque(true);
+        lblDay.setFont(new java.awt.Font("Muthiara -Demo Version-", 0, 36)); // NOI18N
+        lblDay.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblDay.setText("Day");
 
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap(44, Short.MAX_VALUE)
+                .addComponent(lblDate, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(lblTime, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(300, 300, 300))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(26, 26, 26)
+                .addComponent(lblDay, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addComponent(lblDay, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(0, 0, 0)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(lblDate, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addComponent(lblTime, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())))
+        );
+
+        txtEditor.setColumns(20);
+        txtEditor.setFont(new java.awt.Font("Times New Roman", 0, 14)); // NOI18N
+        txtEditor.setRows(5);
+        jScrollPane2.setViewportView(txtEditor);
+
+        jMenuBar1.setBackground(new java.awt.Color(204, 255, 204));
+        jMenuBar1.setBorder(null);
+        jMenuBar1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+
+        menuFile.setBackground(new java.awt.Color(255, 204, 204));
         menuFile.setText("File");
 
         menuNew.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, java.awt.event.InputEvent.CTRL_DOWN_MASK));
@@ -165,23 +218,16 @@ public class TextEditorUI extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(lblDate, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(lblTime, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(534, Short.MAX_VALUE))
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 700, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jScrollPane2)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 652, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblDate, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblTime, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                .addGap(0, 0, 0)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 440, Short.MAX_VALUE)
+                .addGap(0, 0, 0)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         pack();
@@ -202,7 +248,7 @@ public class TextEditorUI extends javax.swing.JFrame {
 
     private void menuExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuExitActionPerformed
        int answer = JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?",
-                "Hello",JOptionPane.YES_NO_OPTION,
+                "Exit",JOptionPane.YES_NO_OPTION,
                 JOptionPane.INFORMATION_MESSAGE, 
                  null);
         if(answer == JOptionPane.YES_OPTION)
@@ -210,41 +256,22 @@ public class TextEditorUI extends javax.swing.JFrame {
     }//GEN-LAST:event_menuExitActionPerformed
 
     private void jMenu1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu1MouseClicked
-        JOptionPane.showMessageDialog(null, 
-                "Text Editor \n Version 1.0.1 \n",
-                "Text Editor", 
+            JOptionPane.showMessageDialog(null, 
+                "Notepad-- (64 bit) \n Version 1.0.1 \n Developed by: Kaye Anne Mirador",
+                "About Notepad Negative", 
                 JOptionPane.INFORMATION_MESSAGE,
-                null);
+                logo);
     }//GEN-LAST:event_jMenu1MouseClicked
 
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(TextEditorUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(TextEditorUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(TextEditorUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(TextEditorUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+       try{
+           FlatSolarizedLightIJTheme.setup();
+       } catch (Exception ex){
+            ex.printStackTrace();
         }
-        //</editor-fold>
-
-        /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new TextEditorUI().setVisible(true);
@@ -255,8 +282,10 @@ public class TextEditorUI extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblDate;
+    private javax.swing.JLabel lblDay;
     private javax.swing.JLabel lblTime;
     private javax.swing.JMenuItem menuCopy;
     private javax.swing.JMenuItem menuCut;
