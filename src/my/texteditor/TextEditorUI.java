@@ -1,70 +1,46 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package my.texteditor;
 
-import com.formdev.flatlaf.FlatIntelliJLaf;
-import java.awt.Font;
 import com.formdev.flatlaf.intellijthemes.FlatSolarizedLightIJTheme;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.text.SimpleDateFormat;
+import java.awt.FileDialog;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
-import javax.swing.Timer;
-import javax.swing.UIManager;
 
-/**
- *
- * @author Kaye Anne
- */
 public class TextEditorUI extends javax.swing.JFrame {
 
-    /**
-     * Creates new form TextEditorUI
-     */
-    
+    String filename;
+    Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
+    Icon logo = new ImageIcon(getClass().getResource("/my/resources/logo.png"));
+
     public TextEditorUI() {
         initComponents();
-        initClock();
         setLocationRelativeTo(null);
-        
-    }
-    
-     Icon logo = new ImageIcon(getClass().getResource("/my/resources/logo.png"));
-    
-       private void initClock() {
-        Timer t = new Timer(1000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                updateTime();
-                updateDate();
-            }
-        });
-        t.start();
-        pack();
-       }
+        Clock clock = new Clock(lblTime);
+        clock.start();
+        showDateTime();
 
-    private void updateTime() {
-        Date now = new Date();
-        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");
-        String time = formatter.format(now);
-        lblTime.setText(time);
     }
-    
-    private void updateDate(){
-        Calendar cal = Calendar.getInstance();
+
+    public void showDateTime() {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yy/MM/dd");
+        LocalDateTime now = LocalDateTime.now();
         DayOfWeek dayOfWeek = LocalDate.now().getDayOfWeek();
-        SimpleDateFormat date = new SimpleDateFormat("yy/MM/dd");
-        lblDate.setText(date.format(cal.getTime()));
+        lblDate.setText(dtf.format(java.time.LocalDate.now()));
+        lblTime.setText((java.time.LocalTime.now().toString()));
         lblDay.setText(String.valueOf(dayOfWeek).toLowerCase());
-        
     }
 
     /**
@@ -80,6 +56,10 @@ public class TextEditorUI extends javax.swing.JFrame {
         lblDate = new javax.swing.JLabel();
         lblTime = new javax.swing.JLabel();
         lblDay = new javax.swing.JLabel();
+        lblDay2 = new javax.swing.JLabel();
+        lblDay1 = new javax.swing.JLabel();
+        jTextField1 = new javax.swing.JTextField();
+        jTextField2 = new javax.swing.JTextField();
         jScrollPane2 = new javax.swing.JScrollPane();
         txtEditor = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
@@ -87,6 +67,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         menuNew = new javax.swing.JMenuItem();
         menuOpen = new javax.swing.JMenuItem();
         menuSave = new javax.swing.JMenuItem();
+        jMenuItem1 = new javax.swing.JMenuItem();
         menuExit = new javax.swing.JMenuItem();
         menuEdit = new javax.swing.JMenu();
         menuCut = new javax.swing.JMenuItem();
@@ -95,52 +76,93 @@ public class TextEditorUI extends javax.swing.JFrame {
         jMenu1 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowOpened(java.awt.event.WindowEvent evt) {
+                formWindowOpened(evt);
+            }
+        });
 
         jPanel1.setBackground(new java.awt.Color(255, 204, 204));
 
         lblDate.setBackground(new java.awt.Color(255, 204, 204));
-        lblDate.setFont(new java.awt.Font("DS-Digital", 0, 24)); // NOI18N
+        lblDate.setFont(new java.awt.Font("DS-Digital", 0, 18)); // NOI18N
         lblDate.setText("Date ");
         lblDate.setOpaque(true);
 
         lblTime.setBackground(new java.awt.Color(0, 0, 0));
-        lblTime.setFont(new java.awt.Font("DS-Digital", 0, 24)); // NOI18N
+        lblTime.setFont(new java.awt.Font("DS-Digital", 0, 18)); // NOI18N
         lblTime.setText("Time");
 
         lblDay.setFont(new java.awt.Font("Muthiara -Demo Version-", 0, 36)); // NOI18N
         lblDay.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblDay.setText("Day");
 
+        lblDay2.setFont(new java.awt.Font("Muthiara -Demo Version-", 0, 18)); // NOI18N
+        lblDay2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblDay2.setText("words");
+
+        lblDay1.setFont(new java.awt.Font("Muthiara -Demo Version-", 0, 18)); // NOI18N
+        lblDay1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblDay1.setText("characters");
+
+        jTextField1.setEditable(false);
+
+        jTextField2.setEditable(false);
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap(44, Short.MAX_VALUE)
-                .addComponent(lblDate, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(lblTime, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(300, 300, 300))
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(26, 26, 26)
-                .addComponent(lblDay, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap(9, Short.MAX_VALUE)
+                        .addComponent(lblDate, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblTime, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(26, 26, 26))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(lblDay, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(73, 73, 73)
+                        .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(37, 37, 37))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(lblDay2, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(lblDay1, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(15, 15, 15))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addComponent(lblDay, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(0, 0, 0)
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(lblDay1)
+                    .addComponent(lblDay2, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addComponent(lblDay, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lblDate, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addComponent(lblTime, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())))
+                    .addComponent(lblTime, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
         txtEditor.setColumns(20);
-        txtEditor.setFont(new java.awt.Font("Times New Roman", 0, 14)); // NOI18N
+        txtEditor.setFont(new java.awt.Font("Margarine", 0, 18)); // NOI18N
         txtEditor.setRows(5);
+        txtEditor.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtEditorKeyReleased(evt);
+            }
+        });
         jScrollPane2.setViewportView(txtEditor);
 
         jMenuBar1.setBackground(new java.awt.Color(204, 255, 204));
@@ -152,6 +174,11 @@ public class TextEditorUI extends javax.swing.JFrame {
 
         menuNew.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuNew.setText("New");
+        menuNew.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuNewActionPerformed(evt);
+            }
+        });
         menuFile.add(menuNew);
 
         menuOpen.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_DOWN_MASK));
@@ -171,6 +198,15 @@ public class TextEditorUI extends javax.swing.JFrame {
             }
         });
         menuFile.add(menuSave);
+
+        jMenuItem1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.SHIFT_DOWN_MASK | java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        jMenuItem1.setText("Save As");
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem1ActionPerformed(evt);
+            }
+        });
+        menuFile.add(jMenuItem1);
 
         menuExit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, java.awt.event.InputEvent.ALT_DOWN_MASK));
         menuExit.setText("Exit");
@@ -196,10 +232,20 @@ public class TextEditorUI extends javax.swing.JFrame {
 
         menuCopy.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuCopy.setText("Copy");
+        menuCopy.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuCopyActionPerformed(evt);
+            }
+        });
         menuEdit.add(menuCopy);
 
         menuPaste.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuPaste.setText("Paste");
+        menuPaste.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuPasteActionPerformed(evt);
+            }
+        });
         menuEdit.add(menuPaste);
 
         jMenuBar1.add(menuEdit);
@@ -225,9 +271,10 @@ public class TextEditorUI extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(0, 0, 0)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 440, Short.MAX_VALUE)
-                .addGap(0, 0, 0)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 427, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, 0))
         );
 
         pack();
@@ -235,41 +282,135 @@ public class TextEditorUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void menuSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSaveActionPerformed
-        // TODO add your handling code here:
+         FileDialog fileDialog = new FileDialog(this, "Save File", FileDialog.SAVE);
+        fileDialog.setVisible(true);
+
+        String filePath = fileDialog.getDirectory() + fileDialog.getFile();
+        try {
+            FileWriter writer = new FileWriter(filePath);
+            writer.write(txtEditor.getText());
+            writer.close();
+        } catch (IOException ex) {
+            System.out.println("An error occured");
+        }
     }//GEN-LAST:event_menuSaveActionPerformed
 
     private void menuCutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCutActionPerformed
-        // TODO add your handling code here:
+        String cutText = txtEditor.getSelectedText();
+        StringSelection cutSelection = new StringSelection(cutText);
+        cb.setContents(cutSelection, cutSelection);
+        txtEditor.replaceRange("", txtEditor.getSelectionStart(), txtEditor.getSelectionEnd());
+
     }//GEN-LAST:event_menuCutActionPerformed
 
     private void menuOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuOpenActionPerformed
-        // TODO add your handling code here:
+        FileDialog fileDialog = new FileDialog(this, "Open File", FileDialog.LOAD);
+        //LOAD - indicates that the purpose of the file dialog window is to locate a file from which to read.
+
+        fileDialog.setVisible(true);  //Shows the Dialog Window 
+        if (fileDialog.getFile() != null) //.getFile() - Gets the selected file of this file dialog. If the user selected CANCEL, the returned file is null.
+        {
+            filename = fileDialog.getDirectory() + fileDialog.getFile();
+            //.getDirectory() - Gets the directory of this file dialog.
+            //.getFile() - Gets the selected file of this file dialog.-
+            setTitle(filename);
+        }
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
+            //BufferedReader - The BufferedReader maintains an internal buffer of 8192 characters.
+            //The FileReader is used to read data (in characters) from files.
+            StringBuilder sb = new StringBuilder();
+            //StringBuilder objects are like String objects, except that they can be modified.
+            //if you need to concatenate a large number of strings, appending to a StringBuilder object is more efficient.
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line + "\n");
+                txtEditor.setText(sb.toString());
+            }
+            reader.close();
+        } catch (IOException e) {
+            System.out.println("File not found!");
+        }
+
+        String text = txtEditor.getText();
+
+
     }//GEN-LAST:event_menuOpenActionPerformed
 
     private void menuExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuExitActionPerformed
-       int answer = JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?",
-                "Exit",JOptionPane.YES_NO_OPTION,
-                JOptionPane.INFORMATION_MESSAGE, 
-                 null);
-        if(answer == JOptionPane.YES_OPTION)
+        int answer = JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?",
+                "Exit", JOptionPane.YES_NO_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null);
+        if (answer == JOptionPane.YES_OPTION)
             System.exit(0);
     }//GEN-LAST:event_menuExitActionPerformed
 
     private void jMenu1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu1MouseClicked
-            JOptionPane.showMessageDialog(null, 
+        JOptionPane.showMessageDialog(null,
                 "Notepad-- (64 bit) \n Version 1.0.1 \n Developed by: Kaye Anne Mirador",
-                "About Notepad Negative", 
+                "About Notepad Negative",
                 JOptionPane.INFORMATION_MESSAGE,
                 logo);
     }//GEN-LAST:event_jMenu1MouseClicked
+
+    private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
+        // TODO add your handling code here:
+    }//GEN-LAST:event_formWindowOpened
+
+    private void menuNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuNewActionPerformed
+        txtEditor.setText("");
+        setTitle(filename);
+        String text = txtEditor.getText();
+        //jLabel2.setText(String.valueOf(mytools.characterCount(text))+" Characters");        
+        //jLabel1.setText(String.valueOf(mytools.wordCount(text))+" words");
+
+    }//GEN-LAST:event_menuNewActionPerformed
+
+    private void menuCopyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCopyActionPerformed
+        String copyText = txtEditor.getSelectedText();
+        StringSelection copySelection = new StringSelection(copyText);
+        cb.setContents(copySelection, copySelection);
+
+    }//GEN-LAST:event_menuCopyActionPerformed
+
+    private void menuPasteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuPasteActionPerformed
+        try {
+            Transferable pasteText = cb.getContents(this);
+            String sel = (String) pasteText.getTransferData(DataFlavor.stringFlavor);
+            txtEditor.replaceRange(sel, txtEditor.getSelectionStart(), txtEditor.getSelectionEnd());
+
+        } catch (Exception e) {
+            System.out.println("Error!");
+        }
+    }//GEN-LAST:event_menuPasteActionPerformed
+
+    private void txtEditorKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtEditorKeyReleased
+        String text = txtEditor.getText();
+
+    }//GEN-LAST:event_txtEditorKeyReleased
+
+    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+        FileDialog fileDialog = new FileDialog(this, "Save File", FileDialog.SAVE);
+        fileDialog.setVisible(true);
+
+        String filePath = fileDialog.getDirectory() + fileDialog.getFile();
+        try {
+            FileWriter writer = new FileWriter(filePath);
+            writer.write(txtEditor.getText());
+            writer.close();
+        } catch (IOException ex) {
+            System.out.println("An error occured");
+        }
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-       try{
-           FlatSolarizedLightIJTheme.setup();
-       } catch (Exception ex){
+        try {
+            FlatSolarizedLightIJTheme.setup();
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -282,10 +423,15 @@ public class TextEditorUI extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JTextField jTextField1;
+    private javax.swing.JTextField jTextField2;
     private javax.swing.JLabel lblDate;
     private javax.swing.JLabel lblDay;
+    private javax.swing.JLabel lblDay1;
+    private javax.swing.JLabel lblDay2;
     private javax.swing.JLabel lblTime;
     private javax.swing.JMenuItem menuCopy;
     private javax.swing.JMenuItem menuCut;
