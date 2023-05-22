@@ -2,11 +2,13 @@ package my.texteditor;
 
 import com.formdev.flatlaf.intellijthemes.FlatSolarizedLightIJTheme;
 import java.awt.FileDialog;
+import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.awt.print.PrinterException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -25,15 +27,22 @@ public class TextEditorUI extends javax.swing.JFrame {
     Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
     Icon logo = new ImageIcon(getClass().getResource("/my/resources/logo.png"));
 
+
     public TextEditorUI() {
         initComponents();
         setLocationRelativeTo(null);
         Clock clock = new Clock(lblTime);
         clock.start();
         showDateTime();
-
     }
 
+    public void updateWordsChars(){
+        Tools tool = new Tools();
+        String txt = txtEditor.getText();
+        txtWords.setText(String.valueOf(tool.wordCount(txt)));
+        txtChars.setText(String.valueOf(tool.characterCount(txt)));
+    }
+    
     public void showDateTime() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yy/MM/dd");
         LocalDateTime now = LocalDateTime.now();
@@ -58,8 +67,8 @@ public class TextEditorUI extends javax.swing.JFrame {
         lblDay = new javax.swing.JLabel();
         lblDay2 = new javax.swing.JLabel();
         lblDay1 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
-        jTextField2 = new javax.swing.JTextField();
+        txtWords = new javax.swing.JTextField();
+        txtChars = new javax.swing.JTextField();
         jScrollPane2 = new javax.swing.JScrollPane();
         txtEditor = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
@@ -67,7 +76,8 @@ public class TextEditorUI extends javax.swing.JFrame {
         menuNew = new javax.swing.JMenuItem();
         menuOpen = new javax.swing.JMenuItem();
         menuSave = new javax.swing.JMenuItem();
-        jMenuItem1 = new javax.swing.JMenuItem();
+        menuSaveAs = new javax.swing.JMenuItem();
+        menuPrint = new javax.swing.JMenuItem();
         menuExit = new javax.swing.JMenuItem();
         menuEdit = new javax.swing.JMenu();
         menuCut = new javax.swing.JMenuItem();
@@ -105,54 +115,59 @@ public class TextEditorUI extends javax.swing.JFrame {
         lblDay1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblDay1.setText("characters");
 
-        jTextField1.setEditable(false);
+        txtWords.setEditable(false);
+        txtWords.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        txtWords.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtWords.setAutoscrolls(false);
+        txtWords.setFocusable(false);
 
-        jTextField2.setEditable(false);
+        txtChars.setEditable(false);
+        txtChars.setFont(new java.awt.Font("DS-Digital", 0, 18)); // NOI18N
+        txtChars.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtChars.setAutoscrolls(false);
+        txtChars.setFocusable(false);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addContainerGap(9, Short.MAX_VALUE)
                         .addComponent(lblDate, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblTime, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(26, 26, 26))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(lblDay, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addGap(30, 30, 30)
+                        .addComponent(lblTime, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(lblDay, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(73, 73, 73)
-                        .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(37, 37, 37))
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(txtWords, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(63, 63, 63)
+                        .addComponent(txtChars, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(42, 42, 42))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(lblDay2, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(lblDay1, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(15, 15, 15))))
+                        .addContainerGap(21, Short.MAX_VALUE))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblDay1)
-                    .addComponent(lblDay2, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(0, 0, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addComponent(lblDay, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(txtWords, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(lblDay, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtChars, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblTime, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(lblDate, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblTime, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(lblDay2, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblDay1)))
         );
 
         txtEditor.setColumns(20);
@@ -199,14 +214,23 @@ public class TextEditorUI extends javax.swing.JFrame {
         });
         menuFile.add(menuSave);
 
-        jMenuItem1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.SHIFT_DOWN_MASK | java.awt.event.InputEvent.CTRL_DOWN_MASK));
-        jMenuItem1.setText("Save As");
-        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+        menuSaveAs.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.SHIFT_DOWN_MASK | java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        menuSaveAs.setText("Save As");
+        menuSaveAs.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem1ActionPerformed(evt);
+                menuSaveAsActionPerformed(evt);
             }
         });
-        menuFile.add(jMenuItem1);
+        menuFile.add(menuSaveAs);
+
+        menuPrint.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        menuPrint.setText("Print");
+        menuPrint.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuPrintActionPerformed(evt);
+            }
+        });
+        menuFile.add(menuPrint);
 
         menuExit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, java.awt.event.InputEvent.ALT_DOWN_MASK));
         menuExit.setText("Exit");
@@ -264,16 +288,16 @@ public class TextEditorUI extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jScrollPane2)
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(0, 0, 0)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 427, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, 0)
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGap(0, 0, 0))
         );
 
@@ -282,16 +306,21 @@ public class TextEditorUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void menuSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSaveActionPerformed
-         FileDialog fileDialog = new FileDialog(this, "Save File", FileDialog.SAVE);
+        FileDialog fileDialog = new FileDialog(this, "Save File", FileDialog.SAVE);
         fileDialog.setVisible(true);
 
-        String filePath = fileDialog.getDirectory() + fileDialog.getFile();
+        if (fileDialog.getFile() != null) {
+            filename = fileDialog.getDirectory() + fileDialog.getFile();
+            setTitle(filename);
+        }
+
         try {
-            FileWriter writer = new FileWriter(filePath);
+            FileWriter writer = new FileWriter(filename + ".txt");
             writer.write(txtEditor.getText());
+            setTitle(filename);
             writer.close();
         } catch (IOException ex) {
-            System.out.println("An error occured");
+            System.out.println("File not Found!");
         }
     }//GEN-LAST:event_menuSaveActionPerformed
 
@@ -300,28 +329,22 @@ public class TextEditorUI extends javax.swing.JFrame {
         StringSelection cutSelection = new StringSelection(cutText);
         cb.setContents(cutSelection, cutSelection);
         txtEditor.replaceRange("", txtEditor.getSelectionStart(), txtEditor.getSelectionEnd());
-
+        updateWordsChars();
+        
     }//GEN-LAST:event_menuCutActionPerformed
 
     private void menuOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuOpenActionPerformed
+        Tools tool = new Tools();
         FileDialog fileDialog = new FileDialog(this, "Open File", FileDialog.LOAD);
-        //LOAD - indicates that the purpose of the file dialog window is to locate a file from which to read.
-
-        fileDialog.setVisible(true);  //Shows the Dialog Window 
-        if (fileDialog.getFile() != null) //.getFile() - Gets the selected file of this file dialog. If the user selected CANCEL, the returned file is null.
+        fileDialog.setVisible(true);
+        if (fileDialog.getFile() != null)
         {
             filename = fileDialog.getDirectory() + fileDialog.getFile();
-            //.getDirectory() - Gets the directory of this file dialog.
-            //.getFile() - Gets the selected file of this file dialog.-
             setTitle(filename);
         }
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filename));
-            //BufferedReader - The BufferedReader maintains an internal buffer of 8192 characters.
-            //The FileReader is used to read data (in characters) from files.
             StringBuilder sb = new StringBuilder();
-            //StringBuilder objects are like String objects, except that they can be modified.
-            //if you need to concatenate a large number of strings, appending to a StringBuilder object is more efficient.
             String line = null;
             while ((line = reader.readLine()) != null) {
                 sb.append(line + "\n");
@@ -332,9 +355,7 @@ public class TextEditorUI extends javax.swing.JFrame {
             System.out.println("File not found!");
         }
 
-        String text = txtEditor.getText();
-
-
+        updateWordsChars();
     }//GEN-LAST:event_menuOpenActionPerformed
 
     private void menuExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuExitActionPerformed
@@ -362,6 +383,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         txtEditor.setText("");
         setTitle(filename);
         String text = txtEditor.getText();
+        updateWordsChars();
         //jLabel2.setText(String.valueOf(mytools.characterCount(text))+" Characters");        
         //jLabel1.setText(String.valueOf(mytools.wordCount(text))+" words");
 
@@ -371,6 +393,8 @@ public class TextEditorUI extends javax.swing.JFrame {
         String copyText = txtEditor.getSelectedText();
         StringSelection copySelection = new StringSelection(copyText);
         cb.setContents(copySelection, copySelection);
+        
+        
 
     }//GEN-LAST:event_menuCopyActionPerformed
 
@@ -383,14 +407,17 @@ public class TextEditorUI extends javax.swing.JFrame {
         } catch (Exception e) {
             System.out.println("Error!");
         }
+        updateWordsChars();
     }//GEN-LAST:event_menuPasteActionPerformed
 
     private void txtEditorKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtEditorKeyReleased
-        String text = txtEditor.getText();
+       updateWordsChars();
 
     }//GEN-LAST:event_txtEditorKeyReleased
 
-    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+    
+    
+    private void menuSaveAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSaveAsActionPerformed
         FileDialog fileDialog = new FileDialog(this, "Save File", FileDialog.SAVE);
         fileDialog.setVisible(true);
 
@@ -402,7 +429,23 @@ public class TextEditorUI extends javax.swing.JFrame {
         } catch (IOException ex) {
             System.out.println("An error occured");
         }
-    }//GEN-LAST:event_jMenuItem1ActionPerformed
+    }//GEN-LAST:event_menuSaveAsActionPerformed
+
+    private void menuPrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuPrintActionPerformed
+        try {
+            boolean complete = txtEditor.print();
+
+            if (complete) {
+                JOptionPane.showMessageDialog(null, "Done Printing", "Information",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, "Printing", "Printer",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (PrinterException e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }//GEN-LAST:event_menuPrintActionPerformed
 
     /**
      * @param args the command line arguments
@@ -423,11 +466,8 @@ public class TextEditorUI extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField2;
     private javax.swing.JLabel lblDate;
     private javax.swing.JLabel lblDay;
     private javax.swing.JLabel lblDay1;
@@ -441,7 +481,11 @@ public class TextEditorUI extends javax.swing.JFrame {
     private javax.swing.JMenuItem menuNew;
     private javax.swing.JMenuItem menuOpen;
     private javax.swing.JMenuItem menuPaste;
+    private javax.swing.JMenuItem menuPrint;
     private javax.swing.JMenuItem menuSave;
+    private javax.swing.JMenuItem menuSaveAs;
+    private javax.swing.JTextField txtChars;
     private javax.swing.JTextArea txtEditor;
+    private javax.swing.JTextField txtWords;
     // End of variables declaration//GEN-END:variables
 }
