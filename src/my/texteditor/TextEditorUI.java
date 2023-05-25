@@ -2,7 +2,9 @@ package my.texteditor;
 
 import com.formdev.flatlaf.intellijthemes.FlatSolarizedLightIJTheme;
 import java.awt.FileDialog;
-import java.awt.Image;
+import java.awt.GraphicsConfiguration;
+import java.awt.Insets;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
@@ -17,7 +19,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import javax.swing.Icon;
+import javax.swing.*;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 
@@ -27,7 +29,6 @@ public class TextEditorUI extends javax.swing.JFrame {
     Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
     Icon logo = new ImageIcon(getClass().getResource("/my/resources/logo.png"));
 
-
     public TextEditorUI() {
         initComponents();
         setLocationRelativeTo(null);
@@ -36,13 +37,13 @@ public class TextEditorUI extends javax.swing.JFrame {
         showDateTime();
     }
 
-    public void updateWordsChars(){
+    public void updateWordsChars() {
         Tools tool = new Tools();
         String txt = txtEditor.getText();
         txtWords.setText(String.valueOf(tool.wordCount(txt)));
         txtChars.setText(String.valueOf(tool.characterCount(txt)));
     }
-    
+
     public void showDateTime() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yy/MM/dd");
         LocalDateTime now = LocalDateTime.now();
@@ -83,6 +84,8 @@ public class TextEditorUI extends javax.swing.JFrame {
         menuCut = new javax.swing.JMenuItem();
         menuCopy = new javax.swing.JMenuItem();
         menuPaste = new javax.swing.JMenuItem();
+        View = new javax.swing.JMenu();
+        jMenuItem1 = new javax.swing.JMenuItem();
         jMenu1 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -274,6 +277,23 @@ public class TextEditorUI extends javax.swing.JFrame {
 
         jMenuBar1.add(menuEdit);
 
+        View.setText("View");
+
+        jMenuItem1.setText("Analog Clock");
+        jMenuItem1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jMenuItem1MouseClicked(evt);
+            }
+        });
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem1ActionPerformed(evt);
+            }
+        });
+        View.add(jMenuItem1);
+
+        jMenuBar1.add(View);
+
         jMenu1.setText("About");
         jMenu1.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -330,15 +350,14 @@ public class TextEditorUI extends javax.swing.JFrame {
         cb.setContents(cutSelection, cutSelection);
         txtEditor.replaceRange("", txtEditor.getSelectionStart(), txtEditor.getSelectionEnd());
         updateWordsChars();
-        
+
     }//GEN-LAST:event_menuCutActionPerformed
 
     private void menuOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuOpenActionPerformed
         Tools tool = new Tools();
         FileDialog fileDialog = new FileDialog(this, "Open File", FileDialog.LOAD);
         fileDialog.setVisible(true);
-        if (fileDialog.getFile() != null)
-        {
+        if (fileDialog.getFile() != null) {
             filename = fileDialog.getDirectory() + fileDialog.getFile();
             setTitle(filename);
         }
@@ -384,17 +403,13 @@ public class TextEditorUI extends javax.swing.JFrame {
         setTitle(filename);
         String text = txtEditor.getText();
         updateWordsChars();
-        //jLabel2.setText(String.valueOf(mytools.characterCount(text))+" Characters");        
-        //jLabel1.setText(String.valueOf(mytools.wordCount(text))+" words");
-
     }//GEN-LAST:event_menuNewActionPerformed
 
     private void menuCopyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCopyActionPerformed
         String copyText = txtEditor.getSelectedText();
         StringSelection copySelection = new StringSelection(copyText);
         cb.setContents(copySelection, copySelection);
-        
-        
+
 
     }//GEN-LAST:event_menuCopyActionPerformed
 
@@ -411,12 +426,11 @@ public class TextEditorUI extends javax.swing.JFrame {
     }//GEN-LAST:event_menuPasteActionPerformed
 
     private void txtEditorKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtEditorKeyReleased
-       updateWordsChars();
+        updateWordsChars();
 
     }//GEN-LAST:event_txtEditorKeyReleased
 
-    
-    
+
     private void menuSaveAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSaveAsActionPerformed
         FileDialog fileDialog = new FileDialog(this, "Save File", FileDialog.SAVE);
         fileDialog.setVisible(true);
@@ -447,25 +461,44 @@ public class TextEditorUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_menuPrintActionPerformed
 
+
+    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+        JFrame frame = new JFrame("Analog Clock");
+        GraphicsConfiguration config = frame.getGraphicsConfiguration();
+        Rectangle rect = config.getBounds();
+
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.getContentPane().add(new AnalogClock());
+        frame.pack();
+        int x = (int) rect.getMaxX() - frame.getWidth();
+        int y = (int) rect.getMaxY() - frame.getHeight();
+        frame.setLocation(x, y - 45);
+        frame.setVisible(true);
+        
+        
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    private void jMenuItem1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenuItem1MouseClicked
+
+    }//GEN-LAST:event_jMenuItem1MouseClicked
+
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        try {
-            FlatSolarizedLightIJTheme.setup();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        FlatSolarizedLightIJTheme.setup();
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new TextEditorUI().setVisible(true);
+                new LoginFrame().setVisible(true);
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenu View;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblDate;
