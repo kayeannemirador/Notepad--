@@ -29,8 +29,6 @@ import java.time.format.DateTimeFormatter;
 import javax.swing.*;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter;
 import javax.swing.text.Highlighter.HighlightPainter;
@@ -39,18 +37,16 @@ import javax.swing.undo.UndoManager;
 
 public class TextEditorUI extends javax.swing.JFrame {
 
-    String filename;
-
-    Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
-
-    Icon logo = new ImageIcon(getClass().getResource("/my/resources/logo.png"));
-
+    String filename, fileNameOnly;
     private Highlighter highlighter;
     private HighlightPainter painter;
 
+    Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
+    Icon logo = new ImageIcon(getClass().getResource("/my/resources/logo.png"));
+
     JTextArea textArea = new JTextArea();
     JScrollPane scroll = new JScrollPane();
-
+ 
     UndoManager um = new UndoManager();
 
     public TextEditorUI() {
@@ -66,15 +62,11 @@ public class TextEditorUI extends javax.swing.JFrame {
     }
 
     public void undoable() {
-        this.txtEditor.getDocument().addUndoableEditListener(um);
-    }
-
-    public void spellChecker(JTextArea txt) {
-
+        txtEditor.getDocument().addUndoableEditListener(um);
     }
 
     public void lineNumbers(JTextArea txt, JScrollPane scrollPane) {
-        JTextLiner n = new JTextLiner(txt);
+        LineNumber n = new LineNumber(txt);
         scrollPane.setRowHeaderView(n);
     }
 
@@ -97,60 +89,126 @@ public class TextEditorUI extends javax.swing.JFrame {
     public void openFile() {
         FileDialog fileDialog = new FileDialog(this, "Open File", FileDialog.LOAD);
         fileDialog.setVisible(true);
+        newTab(textArea, scroll);
+        tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
+
         if (fileDialog.getFile() != null) {
             filename = fileDialog.getDirectory() + fileDialog.getFile();
-        }
-        try {
+            fileNameOnly = fileDialog.getFile();
+            try {
 
-            BufferedReader reader = new BufferedReader(new FileReader(filename));
-            StringBuilder sb = new StringBuilder();
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line + "\n");
-                txtEditor.setText(sb.toString());
+                int index = tabbedPane.getSelectedIndex();
+
+                BufferedReader reader = new BufferedReader(new FileReader(filename));
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                JLabel lblTitle = new JLabel(fileNameOnly);
+
+                tabbedPane.setTabComponentAt(index, lblTitle);
+
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line + "\n");
+                    textArea.setText(sb.toString());
+                }
+                reader.close();
+            } catch (IOException e) {
+                System.out.println("File not found!");
             }
-            reader.close();
-        } catch (IOException e) {
-            System.out.println("File not found!");
+           updateWordsChars(textArea);
         }
-
     }
 
     public void saveFile() {
+        int selectedIndex = tabbedPane.getSelectedIndex();
+     
+         JLabel lblTitle = new JLabel(fileNameOnly);
+        try {
+            if (filename == null) {
+                saveAs();
+            } else {
+                FileWriter writer = new FileWriter(filename + ".txt");
+
+                if (selectedIndex == 0) {
+                    writer.write(txtEditor.getText());
+                } else {
+                       txtArea();
+                    writer.write(textArea.getText());
+                    tabbedPane.setTabComponentAt(tabbedPane.getSelectedIndex(), lblTitle);
+                }
+                
+                
+                writer.close();
+
+            }
+        } catch (IOException ex) {
+
+        }
+
+        // updateWordsChars(textArea);
+    }
+
+    public void saveAs() {
+        int selectedIndex = tabbedPane.getSelectedIndex();
+        txtArea();
         FileDialog fileDialog = new FileDialog(this, "Save File", FileDialog.SAVE);
         fileDialog.setVisible(true);
 
         if (fileDialog.getFile() != null) {
             filename = fileDialog.getDirectory() + fileDialog.getFile();
+            fileNameOnly = fileDialog.getFile();
 
-            JLabel lblTitle = new JLabel(filename);
+            JLabel lblTitle = new JLabel(fileNameOnly);
 
             try {
                 FileWriter writer = new FileWriter(filename + ".txt");
-                writer.write(txtEditor.getText());
+
+                if (selectedIndex == 0) {
+                    writer.write(txtEditor.getText());
+                } else {
+                    writer.write(textArea.getText());
+                }
 
                 tabbedPane.setTabComponentAt(tabbedPane.getSelectedIndex(), lblTitle);
                 writer.close();
             } catch (IOException ex) {
                 System.out.println("File not Found!");
+
             }
         }
-        // updateWordsChars(textArea);
     }
 
     public void printText() {
-        try {
-            boolean complete = txtEditor.print();
+        int selectedIndex = tabbedPane.getSelectedIndex();
+        txtArea();
+        if (selectedIndex == 0) {
+            try {
+                boolean complete = txtEditor.print();
 
-            if (complete) {
-                JOptionPane.showMessageDialog(null, "Done Printing", "Information",
-                        JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(null, "Printing", "Printer",
-                        JOptionPane.INFORMATION_MESSAGE);
+                if (complete) {
+                    JOptionPane.showMessageDialog(null, "Done Printing", "Information",
+                            JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Printing", "Printer",
+                            JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (PrinterException e) {
+                JOptionPane.showMessageDialog(null, e);
             }
-        } catch (PrinterException e) {
-            JOptionPane.showMessageDialog(null, e);
+        } else {
+            try {
+                boolean complete = textArea.print();
+
+                if (complete) {
+                    JOptionPane.showMessageDialog(null, "Done Printing", "Information",
+                            JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Printing", "Printer",
+                            JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (PrinterException e) {
+                JOptionPane.showMessageDialog(null, e);
+            }
         }
     }
 
@@ -171,36 +229,53 @@ public class TextEditorUI extends javax.swing.JFrame {
     }
 
     public void cutText() {
-        String cutText = txtEditor.getSelectedText();
-        StringSelection cutSelection = new StringSelection(cutText);
-        cb.setContents(cutSelection, cutSelection);
-        txtEditor.replaceRange("", txtEditor.getSelectionStart(), txtEditor.getSelectionEnd());
-        updateWordsChars(txtEditor);
+        int selectedIndex = tabbedPane.getSelectedIndex();
+        txtArea();
+        if (selectedIndex == 0) {
+            String cutText = txtEditor.getSelectedText();
+            StringSelection cutSelection = new StringSelection(cutText);
+            cb.setContents(cutSelection, cutSelection);
+            txtEditor.replaceRange("", txtEditor.getSelectionStart(), txtEditor.getSelectionEnd());
+            updateWordsChars(txtEditor);
+        } else {
+            String cutText = textArea.getSelectedText();
+            StringSelection cutSelection = new StringSelection(cutText);
+            cb.setContents(cutSelection, cutSelection);
+            textArea.replaceRange("", textArea.getSelectionStart(), textArea.getSelectionEnd());
+            updateWordsChars(textArea);
+        }
     }
 
     public void pasteText() {
-        try {
-            Transferable pasteText = cb.getContents(this);
-            String sel = (String) pasteText.getTransferData(DataFlavor.stringFlavor);
-            txtEditor.replaceRange(sel, txtEditor.getSelectionStart(), txtEditor.getSelectionEnd());
+        int selectedIndex = tabbedPane.getSelectedIndex();
+        txtArea();
+        if (selectedIndex == 0) {
+            try {
+                Transferable pasteText = cb.getContents(this);
+                String sel = (String) pasteText.getTransferData(DataFlavor.stringFlavor);
+                txtEditor.replaceRange(sel, txtEditor.getSelectionStart(), txtEditor.getSelectionEnd());
 
-        } catch (Exception e) {
-            System.out.println("Error!");
+            } catch (Exception e) {
+                System.out.println("Error!");
+            }
+            updateWordsChars(txtEditor);
+        } else {
+            try {
+                Transferable pasteText = cb.getContents(this);
+                String sel = (String) pasteText.getTransferData(DataFlavor.stringFlavor);
+                textArea.replaceRange(sel, textArea.getSelectionStart(), textArea.getSelectionEnd());
+
+            } catch (Exception e) {
+                System.out.println("Error!");
+            }
+            updateWordsChars(textArea);
         }
-        updateWordsChars(txtEditor);
     }
 
     public void undoText() {
+
         um.undo();
-        /* int caretPosition = txtEditor.getCaretPosition();
-        String text = txtEditor.getText();
 
-        String lastWord = text.substring(caretPosition - text.indexOf(" "), caretPosition);
-
-        txtEditor.setText(text.replace(lastWord, ""));
-
-        // Set the caret position to the end of the text.
-        txtEditor.setCaretPosition(txtEditor.getText().length()); */
     }
 
     public void redoText() {
@@ -208,8 +283,10 @@ public class TextEditorUI extends javax.swing.JFrame {
     }
 
     public void findText() {
+        int index = tabbedPane.getSelectedIndex();
+
         String searchQuery = JOptionPane.showInputDialog(TextEditorUI.this, "Enter word to find:");
-        if (searchQuery != null && !searchQuery.isEmpty()) {
+        if (index == 0 && searchQuery != null && !searchQuery.isEmpty()) {
             String text = txtEditor.getText();
 
             try {
@@ -225,28 +302,63 @@ public class TextEditorUI extends javax.swing.JFrame {
             } catch (BadLocationException ex) {
                 ex.printStackTrace();
             }
+        } else if (index > 0 && searchQuery != null && !searchQuery.isEmpty()) {
+            txtArea();
+            String text = textArea.getText();
+
+            try {
+
+                int startIndex = 0;
+                while ((startIndex = text.indexOf(searchQuery, startIndex)) != -1) {
+                    int endIndex = startIndex + searchQuery.length();
+                    highlighter.addHighlight(startIndex, endIndex, painter);
+                    startIndex = endIndex;
+                }
+                if (highlighter.getHighlights().length == 0) {
+                    JOptionPane.showMessageDialog(TextEditorUI.this, "Word not found.");
+                }
+            } catch (BadLocationException ex) {
+                ex.printStackTrace();
+            }
         }
+
     }
 
     public void findAndReplaceText() {
+        int index = tabbedPane.getSelectedIndex();
+
         String searchText = JOptionPane.showInputDialog(this, "Text to replace:");
         String replaceText = JOptionPane.showInputDialog(this, "Enter replacement text:");
-        if (searchText != null && replaceText != null) {
+        if (index == 0 && searchText != null && replaceText != null) {
             String text = txtEditor.getText();
             text = text.replaceAll(searchText, replaceText);
             txtEditor.setText(text);
             updateWordsChars(txtEditor);
+        } else if (index > 0 && searchText != null && replaceText != null) {
+            String text = textArea.getText();
+            text = text.replaceAll(searchText, replaceText);
+            textArea.setText(text);
+            updateWordsChars(textArea);
         }
     }
 
     public void selectAll() {
-        txtEditor.selectAll();
+        int index = tabbedPane.getSelectedIndex();
+        if (index == 0) {
+            txtEditor.selectAll();
+        } else {
+            textArea.selectAll();
+        }
     }
 
     public void wordWrapText() {
         if (menuWordWrap.isSelected() || btnWordWrap.isSelected()) {
             txtEditor.setLineWrap(true);
             txtEditor.setWrapStyleWord(true);
+            textArea.setLineWrap(true);
+            textArea.setWrapStyleWord(true);
+
+
         } else {
             txtEditor.setLineWrap(false);
             txtEditor.setWrapStyleWord(false);
@@ -295,9 +407,9 @@ public class TextEditorUI extends javax.swing.JFrame {
             } else if (ans == JOptionPane.YES_OPTION) {
                 FileDialog fileDialog = new FileDialog(this, "Save File", FileDialog.SAVE);
                 fileDialog.setVisible(true);
-
                 String filePath = fileDialog.getDirectory() + fileDialog.getFile();
                 try {
+                    newTab(textArea, scroll);
                     FileWriter writer = new FileWriter(filePath);
                     writer.write(txtArea.getText());
                     writer.close();
@@ -308,19 +420,19 @@ public class TextEditorUI extends javax.swing.JFrame {
         }
     }
 
-    public void newTab(JTextArea txt) {
+    public void newTab(JTextArea txt, JScrollPane scrollP) {
         txt = new JTextArea();
         txt.setColumns(1);
         txt.setFont(new java.awt.Font("Courier New", 0, 12));
         txt.setRows(5);
 
-        scroll = new JScrollPane(txt);
-        lineNumbers(txt, scroll);
+        scrollP = new JScrollPane(txt);
+        lineNumbers(txt, scrollP);
         keyPressedOfNewTabArea(txt);
 
         JLabel lblTitle = new JLabel("New tab");
 
-        tabbedPane.addTab("new", scroll);
+        tabbedPane.addTab("new", scrollP);
         tabbedPane.setTabComponentAt(tabbedPane.getTabCount() - 1, lblTitle);
 
     }
@@ -347,6 +459,8 @@ public class TextEditorUI extends javax.swing.JFrame {
 
     }
 
+   
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -359,7 +473,6 @@ public class TextEditorUI extends javax.swing.JFrame {
         lblDay1 = new javax.swing.JLabel();
         txtWords = new javax.swing.JTextField();
         txtChars = new javax.swing.JTextField();
-        jCheckBox1 = new javax.swing.JCheckBox();
         checkboxDarkMode = new javax.swing.JCheckBox();
         tabbedPane = new javax.swing.JTabbedPane();
         edtScrollPane = new javax.swing.JScrollPane();
@@ -368,6 +481,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         btnNew = new javax.swing.JButton();
         btnOpen = new javax.swing.JButton();
         btnSave = new javax.swing.JButton();
+        btnSaveAs = new javax.swing.JButton();
         btnClose = new javax.swing.JButton();
         btnCut = new javax.swing.JButton();
         btnCopy = new javax.swing.JButton();
@@ -412,7 +526,6 @@ public class TextEditorUI extends javax.swing.JFrame {
         menuFont = new javax.swing.JMenuItem();
         View = new javax.swing.JMenu();
         menuClock = new javax.swing.JMenuItem();
-        menuPomodoro = new javax.swing.JMenuItem();
         menuAbout = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -459,10 +572,6 @@ public class TextEditorUI extends javax.swing.JFrame {
         txtChars.setAutoscrolls(false);
         txtChars.setFocusable(false);
 
-        jCheckBox1.setFont(new java.awt.Font("Nirmala UI", 0, 12)); // NOI18N
-        jCheckBox1.setForeground(new java.awt.Color(51, 51, 51));
-        jCheckBox1.setText("Autosave");
-
         checkboxDarkMode.setFont(new java.awt.Font("Nirmala UI", 0, 12)); // NOI18N
         checkboxDarkMode.setForeground(new java.awt.Color(51, 51, 51));
         checkboxDarkMode.setText("Dark Mode");
@@ -489,33 +598,27 @@ public class TextEditorUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 251, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(lblDay2, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(lblDay1, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(30, 30, 30))
+                        .addComponent(txtWords, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(77, 77, 77)
+                        .addComponent(txtChars, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(46, 46, 46))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(checkboxDarkMode)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(txtWords, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(77, 77, 77))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(checkboxDarkMode)
-                                .addGap(53, 53, 53)))
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jCheckBox1)
-                            .addComponent(txtChars, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(25, 25, 25))))
+                                .addComponent(lblDay2, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(lblDay1, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(30, 30, 30))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jCheckBox1)
-                            .addComponent(checkboxDarkMode))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(checkboxDarkMode)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(txtWords, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(txtChars, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -524,6 +627,7 @@ public class TextEditorUI extends javax.swing.JFrame {
                             .addComponent(lblDay1)
                             .addComponent(lblDay2, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(lblDay, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -559,8 +663,10 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.setOpaque(false);
 
         btnNew.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/newfile.png"))); // NOI18N
+        btnNew.setToolTipText("New");
         btnNew.setFocusable(false);
         btnNew.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnNew.setName("New"); // NOI18N
         btnNew.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         btnNew.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -570,7 +676,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.add(btnNew);
 
         btnOpen.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/openfolder.png"))); // NOI18N
-        btnOpen.setToolTipText("");
+        btnOpen.setToolTipText("Open");
         btnOpen.setFocusable(false);
         btnOpen.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btnOpen.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -582,6 +688,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.add(btnOpen);
 
         btnSave.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/save-file.png"))); // NOI18N
+        btnSave.setToolTipText("Save");
         btnSave.setFocusable(false);
         btnSave.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btnSave.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -592,13 +699,32 @@ public class TextEditorUI extends javax.swing.JFrame {
         });
         jToolBar1.add(btnSave);
 
-        btnClose.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/close-file.png"))); // NOI18N
+        btnSaveAs.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/saveas.png"))); // NOI18N
+        btnSaveAs.setToolTipText("Save As");
+        btnSaveAs.setFocusable(false);
+        btnSaveAs.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnSaveAs.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnSaveAs.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSaveAsActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(btnSaveAs);
+
+        btnClose.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/cancel.png"))); // NOI18N
+        btnClose.setToolTipText("Close Tab");
         btnClose.setFocusable(false);
         btnClose.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btnClose.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnClose.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCloseActionPerformed(evt);
+            }
+        });
         jToolBar1.add(btnClose);
 
         btnCut.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/cut.png"))); // NOI18N
+        btnCut.setToolTipText("Cut");
         btnCut.setFocusable(false);
         btnCut.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btnCut.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -610,6 +736,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.add(btnCut);
 
         btnCopy.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/copy.png"))); // NOI18N
+        btnCopy.setToolTipText("Copy");
         btnCopy.setFocusable(false);
         btnCopy.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btnCopy.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -621,6 +748,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.add(btnCopy);
 
         btnPaste.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/paste.png"))); // NOI18N
+        btnPaste.setToolTipText("Paste");
         btnPaste.setFocusable(false);
         btnPaste.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btnPaste.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -632,7 +760,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.add(btnPaste);
 
         jButton8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/undo.png"))); // NOI18N
-        jButton8.setToolTipText("");
+        jButton8.setToolTipText("Undo");
         jButton8.setFocusable(false);
         jButton8.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButton8.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -644,6 +772,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.add(jButton8);
 
         jButton9.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/redo.png"))); // NOI18N
+        jButton9.setToolTipText("Redo");
         jButton9.setFocusable(false);
         jButton9.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButton9.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -655,6 +784,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.add(jButton9);
 
         jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/find.png"))); // NOI18N
+        jButton2.setToolTipText("Find");
         jButton2.setFocusable(false);
         jButton2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButton2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -666,6 +796,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.add(jButton2);
 
         jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/replace.png"))); // NOI18N
+        jButton3.setToolTipText("Find and Replace");
         jButton3.setFocusable(false);
         jButton3.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButton3.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -677,6 +808,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.add(jButton3);
 
         jButton11.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/selection.png"))); // NOI18N
+        jButton11.setToolTipText("Select All");
         jButton11.setFocusable(false);
         jButton11.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButton11.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -688,6 +820,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.add(jButton11);
 
         jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/printer.png"))); // NOI18N
+        jButton1.setToolTipText("Print");
         jButton1.setFocusable(false);
         jButton1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButton1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -699,7 +832,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.add(jButton1);
 
         btnWordWrap.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/justify-text.png"))); // NOI18N
-        btnWordWrap.setToolTipText("");
+        btnWordWrap.setToolTipText("Word Wrap");
         btnWordWrap.setFocusable(false);
         btnWordWrap.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btnWordWrap.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -723,6 +856,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.add(jButton7);
 
         jButton5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/clock.png"))); // NOI18N
+        jButton5.setToolTipText("Clock");
         jButton5.setFocusable(false);
         jButton5.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButton5.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -734,6 +868,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.add(jButton5);
 
         jButton10.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/information.png"))); // NOI18N
+        jButton10.setToolTipText("About");
         jButton10.setFocusable(false);
         jButton10.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButton10.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -745,6 +880,7 @@ public class TextEditorUI extends javax.swing.JFrame {
         jToolBar1.add(jButton10);
 
         jButton4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/my/resources/icons/exit.png"))); // NOI18N
+        jButton4.setToolTipText("Exit");
         jButton4.setFocusable(false);
         jButton4.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButton4.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -791,6 +927,11 @@ public class TextEditorUI extends javax.swing.JFrame {
 
         menuSaveAs.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.SHIFT_DOWN_MASK | java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuSaveAs.setText("Save As");
+        menuSaveAs.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSaveAsActionPerformed(evt);
+            }
+        });
         menuFile.add(menuSaveAs);
         menuFile.add(jSeparator4);
 
@@ -932,9 +1073,6 @@ public class TextEditorUI extends javax.swing.JFrame {
         });
         View.add(menuClock);
 
-        menuPomodoro.setText("Pomodoro");
-        View.add(menuPomodoro);
-
         panelNotepad.add(View);
 
         menuAbout.setText("About");
@@ -970,12 +1108,12 @@ public class TextEditorUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void menuNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuNewActionPerformed
-        newTab(textArea);
+        newTab(textArea, scroll);
 
     }//GEN-LAST:event_menuNewActionPerformed
 
     private void btnNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewActionPerformed
-        newTab(textArea);
+        newTab(textArea, scroll);
 
     }//GEN-LAST:event_btnNewActionPerformed
 
@@ -1112,34 +1250,25 @@ public class TextEditorUI extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton10ActionPerformed
 
     private void tabbedPaneStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_tabbedPaneStateChanged
-
         int selectedIndex = tabbedPane.getSelectedIndex();
-        System.out.println(selectedIndex);
-        textArea.getText();
-        updateWordsChars(textArea);
-
         if (selectedIndex == 0) {
             updateWordsChars(txtEditor);
         } else {
-            // gets the component of the jscrollpane and cast the view to the jTextArea
-            Component jcomp = tabbedPane.getComponentAt(selectedIndex);
-
-            JScrollPane scrollPane = (JScrollPane) jcomp;
-
-            JViewport viewport = scrollPane.getViewport();
-
-            Component view = viewport.getView();
-
-            textArea = (JTextArea) view;
-            
-            String text = textArea.getText();
-            System.out.println("did");
-            System.out.println(text);
+            txtArea();
             updateWordsChars(textArea);
 
         }
     }//GEN-LAST:event_tabbedPaneStateChanged
 
+    public void txtArea() {
+        int selectedIndex = tabbedPane.getSelectedIndex();
+        Component jcomp = tabbedPane.getComponentAt(selectedIndex);
+        JScrollPane scrollPane = (JScrollPane) jcomp;
+        JViewport viewport = scrollPane.getViewport();
+        Component view = viewport.getView();
+        textArea = (JTextArea) view;
+    }
+ 
     private void checkboxDarkModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkboxDarkModeActionPerformed
         if (checkboxDarkMode.isSelected()) {
 
@@ -1173,6 +1302,20 @@ public class TextEditorUI extends javax.swing.JFrame {
         updateWordsChars(txtEditor);
     }//GEN-LAST:event_txtEditorKeyPressed
 
+    private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
+        int tab = tabbedPane.getSelectedIndex();
+        tabbedPane.removeTabAt(tab);
+
+    }//GEN-LAST:event_btnCloseActionPerformed
+
+    private void btnSaveAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveAsActionPerformed
+        saveAs();
+    }//GEN-LAST:event_btnSaveAsActionPerformed
+
+    private void menuSaveAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSaveAsActionPerformed
+        saveAs();
+    }//GEN-LAST:event_menuSaveAsActionPerformed
+
     public static void main(String args[]) {
         FlatSolarizedLightIJTheme.setup();
 
@@ -1194,6 +1337,7 @@ public class TextEditorUI extends javax.swing.JFrame {
     private javax.swing.JButton btnOpen;
     private javax.swing.JButton btnPaste;
     private javax.swing.JButton btnSave;
+    private javax.swing.JButton btnSaveAs;
     private javax.swing.JButton btnWordWrap;
     private javax.swing.JCheckBox checkboxDarkMode;
     private javax.swing.JScrollPane edtScrollPane;
@@ -1207,7 +1351,6 @@ public class TextEditorUI extends javax.swing.JFrame {
     private javax.swing.JButton jButton7;
     private javax.swing.JButton jButton8;
     private javax.swing.JButton jButton9;
-    private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
@@ -1234,7 +1377,6 @@ public class TextEditorUI extends javax.swing.JFrame {
     private javax.swing.JMenuItem menuNew;
     private javax.swing.JMenuItem menuOpen;
     private javax.swing.JMenuItem menuPaste;
-    private javax.swing.JMenuItem menuPomodoro;
     private javax.swing.JMenuItem menuPrint;
     private javax.swing.JMenuItem menuRedo;
     private javax.swing.JMenuItem menuReplace;
